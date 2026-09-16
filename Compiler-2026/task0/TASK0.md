@@ -11,7 +11,7 @@
 
 **<span style="color:#d73a49">Interpreter</span>**，本身是一个编译（指 .c → .exe）好的二进制程序，比如 CPython，是一个**<span style="color:#d73a49">状态机</span>**；也就是说，compiler 由操作系统的加载器直接映射到虚存空间，物理 CPU 的指令指针（PC）直接在这个空间里取指，而 interpreter 是用数据结构等**<span style="color:#d73a49">模拟出了一个 CPU</span>**。
 
-![核心循环](./pics/interpreter.png)
+![核心循环](../pics/interpreter.png)
 
 例如 `c = a + b;`，编译器输出 CPU 的指令为 `%() = add %xa %xb`，解释器会从栈顶取出对象，判断数据类型，在堆上构建结构体（包含引用计数、类型指针），最后把结果在内存中返回。
 
@@ -44,7 +44,7 @@ GCC 的前中后端**<span style="color:#d73a49">高度交织</span>**，充满�
 
 LLVM 内存层级如图所示，包括从大到小的 module—function（参数列表、属性，包括多基本块）—basicblock（单入口单出口的指令序列）—instruction（原子操作）。
 
-![llvm内存层级](./pics/llvm1.jpeg)
+![llvm内存层级](../pics/llvm1.jpeg)
 
 ### SSA（静态单赋值）
 
@@ -57,13 +57,13 @@ LLVM 内存层级如图所示，包括从大到小的 module—function（参数
 
 **<span style="color:#d73a49">phi 函数</span>**：如下图，SSA 在 if-else 的判断中（形如 `%8 = icmp ne i8 %7, 0`）进行分叉，两个分支给出了同一个变量的不同定义，汇合点无法用“单个定义”来指代它；phi 函数的意义就是在汇合点按**<span style="color:#d73a49">前驱块</span>**静态地选出对应的值，形如 `%i_phi = phi i32 [ %i0, %Pre_header ], [ %i1, %Body ]`——从 `%Pre_header` 进来取 `%i0`，从 `%Body` 进来取 `%i1`。 phi 本身没有运行时语义：它在寄存器分配前就被消解为**<span style="color:#d73a49">在前驱块末尾插入的 move</span>**（必要时分裂关键边），那种运行时选择是 **<span style="color:#d73a49">select / CMOV</span>** 的行为。
 
-![llvm的basicblock](./pics/llvm-block.jpg)
+![llvm的basicblock](../pics/llvm-block.jpg)
 
 ### use-def / def-use 链
 
 见下图，假设：循环前 `%pre` 块生成 `%i0 = 0`，循环体 `%whi` 块 `%i1 = add %i_phi, 1`，在循环内外会生成 `%i_phi = phi i32 [ %i0, %Pre_header ], [ %i1, %Body ]` 的 phi 函数，但是 `%i1` 此时还并没产生，就会借助 **<span style="color:#d73a49">use-def 链</span>**建立指向 `%i1` 的指针对象占位，等到生成时便顺利闭环。
 
-![while例子](./pics/while.png)
+![while例子](../pics/while.png)
 
 借上述例子，use-def 和 def-use 链，也就是我依赖谁可以算，我计算后触发谁，在中端优化的时候，例如常量折叠 `%.20 = mul i32 %.4, %.1` 时，其中 `%.4`、`%.1` 等均为 value，假设发现 `%.4` 和 `%.1` 是常量的时候，可以根据 use-def 需求链取下两个参数，将指令替换为常数。def-use 假设 `%.1` 产生，并维护了 `%.17 = sub i32 %.1, 1`，`%.20 = mul i32 %.4, %.1`，即为 **<span style="color:#d73a49">def-use 链</span>**。由此，从一个 Use 取到它的 User、或从一个 Value 取到它的第一个 user/def 都是 **<span style="color:#d73a49">O(1)</span>**（`Use::getUser()`、`use_begin()`），不必扫描整份 IR；但要把一个 Value 的**全部**使用者或定义者遍历完仍然是 **<span style="color:#d73a49">O(k)</span>**（k 为该 Value 的 use 数）——链条消除的是“全 IR 扫描的 O(N)”，而不是把遍历本身变成 O(1)。
 
@@ -128,7 +128,7 @@ LLVM 内存层级如图所示，包括从大到小的 module—function（参数
 
 - **<span style="color:#d73a49">Attribute（属性）</span>**：附加在 Operation 上的编译期已知常量元数据。
 
-![MLIR](./pics/MLIR.png)
+![MLIR](../pics/MLIR.png)
 
 ## 9. （拓展）MLIR 之中的数据流和 LLVM IR 中的数据流是一样的吗？如果是一样的话，请你对应二者相关的数据流概念
 
