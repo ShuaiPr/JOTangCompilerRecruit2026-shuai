@@ -1,0 +1,62 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug compiler_middle_end (input.sy, -O1)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/compiler_middle_end",
+      "args": [
+        "${workspaceFolder}/input.sy",
+        "-S",
+        "-o",
+        "${workspaceFolder}/output.ll",
+        "-O1"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "preLaunchTask": "cmake-build",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Use Intel disassembly flavor",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Debug compiler_middle_end (input.sy, -O0 原始IR)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/compiler_middle_end",
+      "args": [
+        "${workspaceFolder}/input.sy",
+        "-S",
+        "-o",
+        "${workspaceFolder}/output.ll",
+        "-O0"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "preLaunchTask": "cmake-build",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

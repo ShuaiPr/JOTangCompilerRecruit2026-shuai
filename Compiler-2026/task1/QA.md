@@ -24,3 +24,41 @@
 2. Bison **移进** Token，匹配产生式后**归约**。
 3. 归约动作 `new` 节点，`$$` 上交父节点；括号/逗号/分号不建节点。
 4. 归约至 `CompUnit` → 交 **`ASTRoot`** → `ASTPrinter` 输出。
+
+## 5. 可复现的构建命令
+
+```bash
+cd Compiler-2026/task1
+
+# 构建
+mkdir -p include/yacc src/yacc
+bison --defines=include/yacc/Bison.hpp --output=src/yacc/Bison.cpp src/yacc/sysy.y
+flex  --header-file=include/yacc/Flex.hpp --outfile=src/yacc/Flex.cpp src/yacc/sysy.l
+cmake -S . -B build && cmake --build build -j
+
+# 验收
+python3 test_frontend.py --examples
+python3 test_frontend.py
+
+# 再清零（保留生成物则只留 rm -rf build）
+rm -rf build
+rm -f src/yacc/Bison.cpp src/yacc/Flex.cpp src/yacc/stack.hh
+rm -f include/yacc/Bison.hpp include/yacc/Flex.hpp
+```
+
+## 6. 解析及适配流程
+
+```text
+.sy 源文件
+  └─ Flex 生成的 yylex()：DFA 最长匹配切词 → Token + yylval/yylineno
+       └─ Bison LALR(1) 移进-归约
+            └─ 每条产生式归约时执行语义动作 new 出 AST 节点（$$ 上交父节点）
+                 └─ 归约到开始符号 CompUnit → 移交全局 ASTRoot(std::unique_ptr<CompUnit>)
+                      └─ ASTPrinter(Visitor) → 单行 S-expression + 恰好一个 LF
+```
+
+## 7. 适配要点
+
+`main.cpp`、`CMakeLists.txt` 与输出协议固定，适配全部落在 `sysy.l` / `sysy.y` 内：
+
+ **解析器**：`main.cpp` 固定使用 `yy::parser`，故 `.y` 需声明 `%language "C++"`、`api.namespace {yy}`、`api.parser.class {parser}`。
